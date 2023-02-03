@@ -117,3 +117,19 @@ Note that you have to increase the 'total_epochs' value to make sure that the tr
 ## Notes
 Our model predicts inverse depths.
 If you want to get real depth when training stereo model, you have to convert inverse depth to depth, and then multiply it by 36.
+
+## Installation notes
+
+Some notes on how I set this up using an Ubuntu 20 AWS Base DLAMI with CUDA 11. 
+
+- update apt-get
+- install anaconda3 using the instructions here (https://www.digitalocean.com/community/tutorials/how-to-install-anaconda-on-ubuntu-18-04-quickstart)
+- create featdepth environment using python3.7 (and activate)
+- clone forked featdepth repo and install requirements as stated
+- install gdown and download the pretrained model using the google drive id of the linked files (https://stackoverflow.com/questions/25010369/wget-curl-large-file-from-google-drive)
+- pip install nvidia-pyindex nvidia-cudnn
+- export LD_LIBRARY_PATH=/home/ubuntu/anaconda3/envs/featdepth/lib/python3.7/site-packages/nvidia/cublas/lib/:$LD_LIBRARY_PATH (might have to change depending on your path shown by "pip show nvidia-cudnn"
+- fix a typo in the repo file datasets/mono_dataset.puy
+- update the path to the weights file in infer.py and run infer.py as a first test
+-
+

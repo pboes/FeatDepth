@@ -16,17 +16,17 @@ total_epochs = 45
 device_ids = range(8)
 
 depth_pretrained_path = (
-    "/node01/jobs/io/pretrained/checkpoints/resnet/resnet{}.pth".format(
+    "/home/ubuntu/models/nvidia_resnet{}_200821.pth.tar".format(
         depth_num_layers
     )
 )
 pose_pretrained_path = (
-    "/node01/jobs/io/pretrained/checkpoints/resnet/resnet{}.pth".format(pose_num_layers)
+    "/home/ubuntu/models/nvidia_resnet{}_200821.pth.tar".format(pose_num_layers)
 )
 
-in_path = "/ssd/Cityscapes"
-gt_depth_path = "/node01_data5/monodepth2-test/monodepth2/gt_depths.npz"
-checkpoint_path = "/node01_data5/monodepth2-test/model/refine/smallfigure.pth"
+in_path = None # "/ssd/Cityscapes"
+gt_depth_path = None #"/node01_data5/monodepth2-test/monodepth2/gt_depths.npz"
+checkpoint_path = None #"/node01_data5/monodepth2-test/model/refine/smallfigure.pth"
 
 imgs_per_gpu = 2
 workers_per_gpu = 2
@@ -36,7 +36,7 @@ validate = False
 png = True
 scale_invariant = False
 plane_fitting = False
-finetune = False  # PATH TO PTH FILE HERE
+finetune = "/home/ubuntu/models/fm_depth.pth"
 perception = False
 focus_loss = False
 
