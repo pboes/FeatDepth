@@ -11,6 +11,11 @@ class TrafficCamsDataset(MonoDataset):
     def __init__(self, *args, **kwargs):
         super(TrafficCamsDataset, self).__init__(*args, **kwargs)
 
+        self.K = np.array(
+            [[0.58, 0, 0.5, 0], [0, 1.92, 0.5, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+            dtype=np.float32,
+        )
+
     def __getitem__(self, index):
         """Returns a single training item from the dataset as a dictionary.
 
