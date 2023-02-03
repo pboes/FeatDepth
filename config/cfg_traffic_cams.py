@@ -44,7 +44,7 @@ total_epochs = 40
 imgs_per_gpu = IMGS_PER_GPU
 learning_rate = 1e-4
 workers_per_gpu = 4
-validate = True
+validate = False # True
 
 optimizer = dict(type='Adam', lr=learning_rate, weight_decay=0)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
