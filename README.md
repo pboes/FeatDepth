@@ -131,5 +131,15 @@ Some notes on how I set this up using an Ubuntu 20 AWS Base DLAMI with CUDA 11.
 - export LD_LIBRARY_PATH=/home/ubuntu/anaconda3/envs/featdepth/lib/python3.7/site-packages/nvidia/cublas/lib/:$LD_LIBRARY_PATH (might have to change depending on your path shown by "pip show nvidia-cudnn"
 - fix a typo in the repo file datasets/mono_dataset.puy
 - update the path to the weights file in infer.py and run infer.py as a first test
+
+### FOr training
+- download the pretrained resnet 18 and resnet 50 models from (https://github.com/fregu856/deeplabv3/tree/master/pretrained_models/resnet) (probably there's a much better way to get them)
+- download the pretrained autoencoder (not sure it's required)
+- adjust the paths in the config correspondingly
+- get rid of distributed training by running "python train.py --launcher none --gpus 0 --config config/cfg_traffic_cams.py --work_dir ../models/"
+- for data:
+- install awscli and configure as described here (https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and getting the information from the command line access option when loading into SSO
+- copy the files from the HamptonRoads from s3 into a suitable directory
+- generate the frames and train_files using generator scripts (or simply the REPL)
 -
 
