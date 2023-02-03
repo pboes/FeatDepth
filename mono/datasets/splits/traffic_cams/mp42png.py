@@ -1,6 +1,7 @@
 import cv2
 import os
 import glob
+import argparse
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Turn videos into frames")
@@ -17,10 +18,10 @@ def parse_args():
 def main(args):
 
 
-    videoPath = os.path.join(args["in_dir"], "*.mp4")
+    videoPath = os.path.join(args.in_dir, "*.mp4")
     videos = glob.glob(videoPath)
 
-    parentDir = args["out_dir"]
+    parentDir = args.out_dir
 
     j = 0
 
