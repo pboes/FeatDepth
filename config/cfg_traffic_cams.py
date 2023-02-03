@@ -1,73 +1,66 @@
-split = "traffic_cams"
-dataset = "traffic_cams"
+DEPTH_LAYERS = 50#resnet50
+POSE_LAYERS = 50 #18#resnet18 changed this to 50 for testing
+FRAME_IDS = [0, -1, 1]#0 refers to current frame, -1 and 1 refer to temperally adjacent frames, 's' refers to stereo adjacent frame.
+IMGS_PER_GPU = 2 #the number of images fed to each GPU
+HEIGHT = 320#input image height
+WIDTH = 1024#input image width
 
-height = 384  # CHANGE THIS
-width = 768  # CHANGE THIS
-disparity_smoothness = 1e-3
-scales = [0, 1, 2, 3, 4]
-min_depth = 0.1
-max_depth = 100.0
-frame_ids = [0, -1, 1]
+data = dict(
+    name = 'kitti',#dataset name
+    split = 'exp',#training split name
+    height = HEIGHT,
+    width = WIDTH,
+    frame_ids = FRAME_IDS,
+    in_path = None # '/media/sconly/harddisk/data/kitti/kitti_raw/rawdata',#path to raw data
+    gt_depth_path = None #'/media/sconly/harddisk/data/kitti/kitti_raw/rawdata/gt_depths.npz',#path to gt data
+    png = False,#image format
+    stereo_scale = True if 's' in FRAME_IDS else False,
+)
+
+model = dict(
+    name = 'mono_fm',# select a model by name
+    depth_num_layers = DEPTH_LAYERS,
+    pose_num_layers = POSE_LAYERS,
+    frame_ids = FRAME_IDS,
+    imgs_per_gpu = IMGS_PER_GPU,
+    height = HEIGHT,
+    width = WIDTH,
+    scales = [0, 1, 2, 3],# output different scales of depth maps
+    min_depth = 0.1, # minimum of predicted depth value
+    max_depth = 100.0, # maximum of predicted depth value
+    depth_pretrained_path = '/home/ubuntu/models/nvidia_resnet{}_200821.pth.tar'.format(DEPTH_LAYERS'# pretrained weights for resnet
+    pose_pretrained_path =  '/home/ubuntu/models/nvidia_resnet{}_200821.pth.tar'ormat(POSE_LAYERS),# pretrained weights for resnet
+    extractor_pretrained_path = '/home/ubuntu/models/autoencoder.pth',# pretrained weights for autoencoder
+    automask = False if 's' in FRAME_IDS else True,
+    disp_norm = False if 's' in FRAME_IDS else True,
+    perception_weight = 1e-3,
+    smoothness_weight = 1e-3,
+)
+
+# resume_from = '/node01_data5/monodepth2-test/model/ms/ms.pth'#directly start training from provide weights
+resume_from = None
+finetune = '/home/ubuntu/models/fm_depth.pth'
+total_epochs = 40
+imgs_per_gpu = IMGS_PER_GPU
 learning_rate = 1e-4
+workers_per_gpu = 4
+validate = True
 
-depth_num_layers = 50
-pose_num_layers = 50
-total_epochs = 45
-device_ids = range(8)
-
-depth_pretrained_path = (
-    "/home/ubuntu/models/nvidia_resnet{}_200821.pth.tar".format(
-        depth_num_layers
-    )
-)
-pose_pretrained_path = (
-    "/home/ubuntu/models/nvidia_resnet{}_200821.pth.tar".format(pose_num_layers)
-)
-
-in_path = None # "/ssd/Cityscapes"
-gt_depth_path = None #"/node01_data5/monodepth2-test/monodepth2/gt_depths.npz"
-checkpoint_path = None #"/node01_data5/monodepth2-test/model/refine/smallfigure.pth"
-
-imgs_per_gpu = 2
-workers_per_gpu = 2
-
-validate = False
-
-png = True
-scale_invariant = False
-plane_fitting = False
-finetune = "/home/ubuntu/models/fm_depth.pth"
-perception = False
-focus_loss = False
-
-scale_invariant_weight = 0.01
-plane_fitting_weight = 0.0001
-perceptional_weight = 0.001
-
-optimizer = dict(type="Adam", lr=learning_rate, weight_decay=0)
+optimizer = dict(type='Adam', lr=learning_rate, weight_decay=0)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
-# learning policy
 lr_config = dict(
-    policy="step",
-    warmup="linear",
+    policy='step',
+    warmup='linear',
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
-    step=[15, 25, 35],
+    step=[20,30],
     gamma=0.5,
 )
 
 checkpoint_config = dict(interval=1)
-# yapf:disable
-log_config = dict(
-    interval=50,
-    hooks=[
-        dict(type="TextLoggerHook"),
-    ],
-)
-# yapf:enable
-# runtime settings
-dist_params = dict(backend="nccl")
-log_level = "INFO"
+log_config = dict(interval=50,
+                  hooks=[dict(type='TextLoggerHook'),])
+dist_params = dict(backend='nccl')
+log_level = 'INFO'
 load_from = None
-resume_from = None
-workflow = [("train", 1)]
+workflow = [('train', 1)]
