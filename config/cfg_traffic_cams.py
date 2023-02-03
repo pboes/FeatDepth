@@ -6,12 +6,12 @@ HEIGHT = 320#input image height
 WIDTH = 1024#input image width
 
 data = dict(
-    name = 'folder',#dataset name
+    name = 'traffic_cams',#dataset name
     split = 'traffic_cams',#training split name
     height = HEIGHT,
     width = WIDTH,
     frame_ids = FRAME_IDS,
-    in_path = '/home/ubuntu/data/aws/HamptonRoads/frames/HamptonRdsHBRT54/',#path to raw data
+    in_path = '/home/ubuntu/data/aws/HamptonRoads/frames',#path to raw data
     gt_depth_path = None, #'/media/sconly/harddisk/data/kitti/kitti_raw/rawdata/gt_depths.npz',#path to gt data
     png = True,#image format
     stereo_scale = True if 's' in FRAME_IDS else False,

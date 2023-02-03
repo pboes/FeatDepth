@@ -164,7 +164,7 @@ class MonoDataset(data.Dataset):
         inputs[("inv_K")] = torch.from_numpy(inv_K)
 
         if do_color_aug:
-            color_aug = transforms.ColorJitter(brightness=self.brightness, contrast=self.contrast, saturation=self.saturation, hue=self.hue))
+            color_aug = transforms.ColorJitter(brightness=self.brightness, contrast=self.contrast, saturation=self.saturation, hue=self.hue)
         else:
             color_aug = (lambda x: x)
 
