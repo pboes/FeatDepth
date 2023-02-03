@@ -21,7 +21,7 @@ def get_dataset(cfg, training=True):
     elif dataset_name == "euroc":
         from .euroc_dataset import FolderDataset as dataset
     elif dataset_name == "traffic_cams":
-        from .mono_dataset import MonoDataset as dataset
+        from .traffic_cams_dataset import TrafficCamsDataset as dataset
 
     fpath = os.path.join(os.path.dirname(__file__), "splits", cfg.split, "{}_files.txt")
     filenames = (
