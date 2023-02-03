@@ -80,8 +80,8 @@ class TrafficCamsDataset(MonoDataset):
     def get_color(self, frame_index, relative_index, do_flip):
         if (frame_index == 0) and (relative_index <= 0):
             other_index = 0
-        elif (frame_index == len(self.filenames)) and (relative_index >= 0):
-            other_index = len(self.filenames)
+        elif (frame_index == len(self.filenames) - 1) and (relative_index >= 0):
+            other_index = len(self.filenames) - 1
         else:
             other_index = frame_index + relative_index
 

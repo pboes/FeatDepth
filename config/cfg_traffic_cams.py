@@ -6,8 +6,8 @@ FRAME_IDS = [
     1,
 ]  # 0 refers to current frame, -1 and 1 refer to temperally adjacent frames, 's' refers to stereo adjacent frame.
 IMGS_PER_GPU = 2  # the number of images fed to each GPU
-HEIGHT = 320  # input image height
-WIDTH = 1024  # input image width
+HEIGHT = 240  # input image height
+WIDTH = 320  # input image width
 
 data = dict(
     name="traffic_cams",  # dataset name
