@@ -11,8 +11,10 @@ class TrafficCamsDataset(MonoDataset):
     def __init__(self, *args, **kwargs):
         super(TrafficCamsDataset, self).__init__(*args, **kwargs)
 
+        # after some lengthy research realised that the focal length values here are the ratio between the focal length and the sensor size (in the corresponding direction).
+        # Since for CCTV cameras we have 2.8mm-4mm as standard and square chips of 8-10mm, I've gone with 0.4 in both directions.
         self.K = np.array(
-            [[0.58, 0, 0.5, 0], [0, 1.92, 0.5, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+            [[0.4, 0, 0.5, 0], [0, 0.4, 0.5, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
             dtype=np.float32,
         )
 

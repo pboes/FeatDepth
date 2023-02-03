@@ -29,7 +29,7 @@ model = dict(
     imgs_per_gpu=IMGS_PER_GPU,
     height=HEIGHT,
     width=WIDTH,
-    scales=[0, 1, 2, 3],  # output different scales of depth maps
+    scales=[0, 1],  # output different scales of depth maps
     min_depth=0.1,  # minimum of predicted depth value
     max_depth=100.0,  # maximum of predicted depth value
     depth_pretrained_path="/home/ubuntu/deeplabv3/pretrained_models/resnet/resnet50-19c8e357.pth".format(
@@ -47,10 +47,10 @@ model = dict(
 
 # resume_from = '/node01_data5/monodepth2-test/model/ms/ms.pth'#directly start training from provide weights
 resume_from = None
-finetune = "/home/ubuntu/models/fm_depth.pth"
-total_epochs = 40
+finetune = "/home/ubuntu/models/fm_depth_odom.pth"  # using the pretrained odometry model as this should hopefully reduce distortion due to the difference in perspective.
+total_epochs = 3
 imgs_per_gpu = IMGS_PER_GPU
-learning_rate = 1e-4
+learning_rate = 2e-5  # learning rate was 1e-4, so we choose a learning rate 5x smaller for fine-tuning
 workers_per_gpu = 4
 validate = False  # True
 
