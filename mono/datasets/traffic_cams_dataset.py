@@ -2,7 +2,7 @@ import random
 from .mono_dataset import MonoDataset
 import os
 import PIL.Image as pil  # using pillow-simd for increased speed
-
+import numpy as np
 import torch
 from torchvision import transforms
 
