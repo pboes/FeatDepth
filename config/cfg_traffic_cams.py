@@ -1,5 +1,5 @@
 DEPTH_LAYERS = 50#resnet50
-POSE_LAYERS = 50 #18#resnet18 changed this to 50 for testing
+POSE_LAYERS = 18#resnet18 
 FRAME_IDS = [0, -1, 1]#0 refers to current frame, -1 and 1 refer to temperally adjacent frames, 's' refers to stereo adjacent frame.
 IMGS_PER_GPU = 2 #the number of images fed to each GPU
 HEIGHT = 320#input image height
