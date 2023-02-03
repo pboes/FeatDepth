@@ -80,7 +80,7 @@ class TrafficCamsDataset(MonoDataset):
         else:
             other_index = frame_index + relative_index
 
-        color = self.loader(self.filenames[other_index])
+        color = self.loader(os.path.join(self.data_path, self.filenames[other_index]))
 
         if do_flip:
             color = color.transpose(pil.FLIP_LEFT_RIGHT)
