@@ -15,9 +15,11 @@ from ..registry import MONO
 def build_extractor(num_layers, pretrained_path):
     extractor = Encoder(num_layers, None)
     if pretrained_path is not None:
-        checkpoint = torch.load(pretrained_path, map_location='cpu')
+        checkpoint = torch.load(pretrained_path, map_location="cpu")
         for name, param in extractor.state_dict().items():
-            extractor.state_dict()[name].copy_(checkpoint['state_dict']['Encoder.' + name])
+            extractor.state_dict()[name].copy_(
+                checkpoint["state_dict"]["Encoder." + name]
+            )
         for param in extractor.parameters():
             param.requires_grad = False
     return extractor
@@ -28,29 +30,34 @@ class mono_fm(nn.Module):
     def __init__(self, options):
         super(mono_fm, self).__init__()
         self.opt = options
-        self.DepthEncoder = DepthEncoder(self.opt.depth_num_layers,
-                                         self.opt.depth_pretrained_path)
+        self.DepthEncoder = DepthEncoder(
+            self.opt.depth_num_layers, self.opt.depth_pretrained_path
+        )
         self.DepthDecoder = DepthDecoder(self.DepthEncoder.num_ch_enc)
-        self.PoseEncoder = PoseEncoder(self.opt.pose_num_layers,
-                                       self.opt.pose_pretrained_path)
+        self.PoseEncoder = PoseEncoder(
+            self.opt.pose_num_layers, self.opt.pose_pretrained_path
+        )
         self.PoseDecoder = PoseDecoder(self.PoseEncoder.num_ch_enc)
-        self.extractor = build_extractor(self.opt.depth_num_layers,
-                                         self.opt.extractor_pretrained_path)
+        self.extractor = build_extractor(
+            self.opt.depth_num_layers, self.opt.extractor_pretrained_path
+        )
         self.ssim = SSIM()
-        self.backproject = Backproject(self.opt.imgs_per_gpu, self.opt.height, self.opt.width)
-        self.project= Project(self.opt.imgs_per_gpu, self.opt.height, self.opt.width)
+        self.backproject = Backproject(
+            self.opt.imgs_per_gpu, self.opt.height, self.opt.width
+        )
+        self.project = Project(self.opt.imgs_per_gpu, self.opt.height, self.opt.width)
 
     def forward(self, inputs):
         outputs = self.DepthDecoder(self.DepthEncoder(inputs["color_aug", 0, 0]))
         if self.training:
-            outputs.update(self.predict_poses(inputs))
+            # outputs.update(self.predict_poses(inputs))
             loss_dict = self.compute_losses(inputs, outputs)
             return outputs, loss_dict
         return outputs
 
     def robust_l1(self, pred, target):
         eps = 1e-3
-        return torch.sqrt(torch.pow(target - pred, 2) + eps ** 2)
+        return torch.sqrt(torch.pow(target - pred, 2) + eps**2)
 
     def compute_perceptional_loss(self, tgt_f, src_f):
         loss = self.robust_l1(tgt_f, src_f).mean(1, True)
@@ -59,7 +66,7 @@ class mono_fm(nn.Module):
     def compute_reprojection_loss(self, pred, target):
         photometric_loss = self.robust_l1(pred, target).mean(1, True)
         ssim_loss = self.ssim(pred, target).mean(1, True)
-        reprojection_loss = (0.85 * ssim_loss + 0.15 * photometric_loss)
+        reprojection_loss = 0.85 * ssim_loss + 0.15 * photometric_loss
         return reprojection_loss
 
     def compute_losses(self, inputs, outputs):
@@ -86,8 +93,12 @@ class mono_fm(nn.Module):
             if self.opt.automask:
                 for frame_id in self.opt.frame_ids[1:]:
                     pred = inputs[("color", frame_id, 0)]
-                    identity_reprojection_loss = self.compute_reprojection_loss(pred, target)
-                    identity_reprojection_loss += torch.randn(identity_reprojection_loss.shape).cuda() * 1e-5
+                    identity_reprojection_loss = self.compute_reprojection_loss(
+                        pred, target
+                    )
+                    identity_reprojection_loss += (
+                        torch.randn(identity_reprojection_loss.shape).cuda() * 1e-5
+                    )
                     reprojection_losses.append(identity_reprojection_loss)
 
             """
@@ -98,8 +109,12 @@ class mono_fm(nn.Module):
                 reprojection_losses.append(self.compute_reprojection_loss(pred, target))
             reprojection_loss = torch.cat(reprojection_losses, 1)
 
-            min_reconstruct_loss, outputs[("min_index", scale)] = torch.min(reprojection_loss, dim=1)
-            loss_dict[('min_reconstruct_loss', scale)] = min_reconstruct_loss.mean()/len(self.opt.scales)
+            min_reconstruct_loss, outputs[("min_index", scale)] = torch.min(
+                reprojection_loss, dim=1
+            )
+            loss_dict[
+                ("min_reconstruct_loss", scale)
+            ] = min_reconstruct_loss.mean() / len(self.opt.scales)
 
             """
             minimum perceptional loss
@@ -110,8 +125,14 @@ class mono_fm(nn.Module):
                 perceptional_losses.append(self.compute_perceptional_loss(tgt_f, src_f))
             perceptional_loss = torch.cat(perceptional_losses, 1)
 
-            min_perceptional_loss, outputs[("min_index", scale)] = torch.min(perceptional_loss, dim=1)
-            loss_dict[('min_perceptional_loss', scale)] = self.opt.perception_weight * min_perceptional_loss.mean() / len(self.opt.scales)
+            min_perceptional_loss, outputs[("min_index", scale)] = torch.min(
+                perceptional_loss, dim=1
+            )
+            loss_dict[("min_perceptional_loss", scale)] = (
+                self.opt.perception_weight
+                * min_perceptional_loss.mean()
+                / len(self.opt.scales)
+            )
 
             """
             disp mean normalization
@@ -124,7 +145,12 @@ class mono_fm(nn.Module):
             smooth loss
             """
             smooth_loss = self.get_smooth_loss(disp, target)
-            loss_dict[('smooth_loss', scale)] = self.opt.smoothness_weight * smooth_loss / (2 ** scale)/len(self.opt.scales)
+            loss_dict[("smooth_loss", scale)] = (
+                self.opt.smoothness_weight
+                * smooth_loss
+                / (2**scale)
+                / len(self.opt.scales)
+            )
 
         return loss_dict
 
@@ -137,8 +163,16 @@ class mono_fm(nn.Module):
 
     def predict_poses(self, inputs):
         outputs = {}
-        #[192,640] for kitti
-        pose_feats = {f_i: F.interpolate(inputs["color_aug", f_i, 0], [192, 640], mode="bilinear", align_corners=False) for f_i in self.opt.frame_ids}
+        # [192,640] for kitti
+        pose_feats = {
+            f_i: F.interpolate(
+                inputs["color_aug", f_i, 0],
+                [192, 640],
+                mode="bilinear",
+                align_corners=False,
+            )
+            for f_i in self.opt.frame_ids
+        }
         for f_i in self.opt.frame_ids[1:]:
             if not f_i == "s":
                 if f_i < 0:
@@ -147,12 +181,19 @@ class mono_fm(nn.Module):
                     pose_inputs = [pose_feats[0], pose_feats[f_i]]
                 pose_inputs = self.PoseEncoder(torch.cat(pose_inputs, 1))
                 axisangle, translation = self.PoseDecoder(pose_inputs)
-                outputs[("cam_T_cam", 0, f_i)] = self.transformation_from_parameters(axisangle[:, 0], translation[:, 0], invert=(f_i < 0))
+                outputs[("cam_T_cam", 0, f_i)] = self.transformation_from_parameters(
+                    axisangle[:, 0], translation[:, 0], invert=(f_i < 0)
+                )
         return outputs
 
     def generate_images_pred(self, inputs, outputs, scale):
         disp = outputs[("disp", 0, scale)]
-        disp = F.interpolate(disp, [self.opt.height, self.opt.width], mode="bilinear", align_corners=False)
+        disp = F.interpolate(
+            disp,
+            [self.opt.height, self.opt.width],
+            mode="bilinear",
+            align_corners=False,
+        )
         _, depth = self.disp_to_depth(disp, self.opt.min_depth, self.opt.max_depth)
         for i, frame_id in enumerate(self.opt.frame_ids[1:]):
             if frame_id == "s":
@@ -160,14 +201,21 @@ class mono_fm(nn.Module):
             else:
                 T = outputs[("cam_T_cam", 0, frame_id)]
             cam_points = self.backproject(depth, inputs[("inv_K")])
-            pix_coords = self.project(cam_points, inputs[("K")], T)#[b,h,w,2]
+            pix_coords = self.project(cam_points, inputs[("K")], T)  # [b,h,w,2]
             img = inputs[("color", frame_id, 0)]
-            outputs[("color", frame_id, scale)] = F.grid_sample(img, pix_coords, padding_mode="border")
+            outputs[("color", frame_id, scale)] = F.grid_sample(
+                img, pix_coords, padding_mode="border"
+            )
         return outputs
 
     def generate_features_pred(self, inputs, outputs):
         disp = outputs[("disp", 0, 0)]
-        disp = F.interpolate(disp, [int(self.opt.height/2), int(self.opt.width/2)], mode="bilinear", align_corners=False)
+        disp = F.interpolate(
+            disp,
+            [int(self.opt.height / 2), int(self.opt.width / 2)],
+            mode="bilinear",
+            align_corners=False,
+        )
         _, depth = self.disp_to_depth(disp, self.opt.min_depth, self.opt.max_depth)
         for i, frame_id in enumerate(self.opt.frame_ids[1:]):
             if frame_id == "s":
@@ -175,8 +223,12 @@ class mono_fm(nn.Module):
             else:
                 T = outputs[("cam_T_cam", 0, frame_id)]
 
-            backproject = Backproject(self.opt.imgs_per_gpu, int(self.opt.height/2), int(self.opt.width/2))
-            project = Project(self.opt.imgs_per_gpu, int(self.opt.height/2), int(self.opt.width/2))
+            backproject = Backproject(
+                self.opt.imgs_per_gpu, int(self.opt.height / 2), int(self.opt.width / 2)
+            )
+            project = Project(
+                self.opt.imgs_per_gpu, int(self.opt.height / 2), int(self.opt.width / 2)
+            )
 
             K = inputs[("K")].clone()
             K[:, 0, :] /= 2
@@ -191,7 +243,9 @@ class mono_fm(nn.Module):
 
             img = inputs[("color", frame_id, 0)]
             src_f = self.extractor(img)[0]
-            outputs[("feature", frame_id, 0)] = F.grid_sample(src_f, pix_coords, padding_mode="border")
+            outputs[("feature", frame_id, 0)] = F.grid_sample(
+                src_f, pix_coords, padding_mode="border"
+            )
         return outputs
 
     def transformation_from_parameters(self, axisangle, translation, invert=False):
@@ -252,7 +306,7 @@ class mono_fm(nn.Module):
         b, _, h, w = disp.size()
         a1 = 0.5
         a2 = 0.5
-        img = F.interpolate(img, (h, w), mode='area')
+        img = F.interpolate(img, (h, w), mode="area")
 
         disp_dx, disp_dy = self.gradient(disp)
         img_dx, img_dy = self.gradient(img)
@@ -263,15 +317,18 @@ class mono_fm(nn.Module):
         img_dxx, img_dxy = self.gradient(img_dx)
         img_dyx, img_dyy = self.gradient(img_dy)
 
-        smooth1 = torch.mean(disp_dx.abs() * torch.exp(-a1 * img_dx.abs().mean(1, True))) + \
-                  torch.mean(disp_dy.abs() * torch.exp(-a1 * img_dy.abs().mean(1, True)))
+        smooth1 = torch.mean(
+            disp_dx.abs() * torch.exp(-a1 * img_dx.abs().mean(1, True))
+        ) + torch.mean(disp_dy.abs() * torch.exp(-a1 * img_dy.abs().mean(1, True)))
 
-        smooth2 = torch.mean(disp_dxx.abs() * torch.exp(-a2 * img_dxx.abs().mean(1, True))) + \
-                  torch.mean(disp_dxy.abs() * torch.exp(-a2 * img_dxy.abs().mean(1, True))) + \
-                  torch.mean(disp_dyx.abs() * torch.exp(-a2 * img_dyx.abs().mean(1, True))) + \
-                  torch.mean(disp_dyy.abs() * torch.exp(-a2 * img_dyy.abs().mean(1, True)))
+        smooth2 = (
+            torch.mean(disp_dxx.abs() * torch.exp(-a2 * img_dxx.abs().mean(1, True)))
+            + torch.mean(disp_dxy.abs() * torch.exp(-a2 * img_dxy.abs().mean(1, True)))
+            + torch.mean(disp_dyx.abs() * torch.exp(-a2 * img_dyx.abs().mean(1, True)))
+            + torch.mean(disp_dyy.abs() * torch.exp(-a2 * img_dyy.abs().mean(1, True)))
+        )
 
-        return smooth1+smooth2
+        return smooth1 + smooth2
 
     def gradient(self, D):
         D_dy = D[:, :, 1:] - D[:, :, :-1]

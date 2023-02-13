@@ -5,7 +5,7 @@ FRAME_IDS = [
     -1,
     1,
 ]  # 0 refers to current frame, -1 and 1 refer to temperally adjacent frames, 's' refers to stereo adjacent frame.
-IMGS_PER_GPU = 2  # the number of images fed to each GPU
+IMGS_PER_GPU = 32  # the number of images fed to each GPU
 HEIGHT = 240  # input image height
 WIDTH = 320  # input image width
 
@@ -47,10 +47,10 @@ model = dict(
 
 # resume_from = '/node01_data5/monodepth2-test/model/ms/ms.pth'#directly start training from provide weights
 resume_from = None
-finetune = "/home/ubuntu/models/fm_depth_odom.pth"  # using the pretrained odometry model as this should hopefully reduce distortion due to the difference in perspective.
-total_epochs = 3
+finetune = "/home/ubuntu/models/NYU.pth"  # the NYU dataset surprisingly gave the most plausible initial depthmaps.
+total_epochs = 10
 imgs_per_gpu = IMGS_PER_GPU
-learning_rate = 2e-5  # learning rate was 1e-4, so we choose a learning rate 5x smaller for fine-tuning
+learning_rate = 1e-2
 workers_per_gpu = 4
 validate = False  # True
 
